@@ -5,14 +5,52 @@ dotenv.config();
 
 export class MQTTService {
   private client: MqttClient | null = null;
+  private isConnecting: boolean = false;
+  private hasInitiallyConnected: boolean = false;
 
   connect(): Promise<MqttClient> {
+    // Prevent multiple connections
+    if (this.client && this.client.connected) {
+      console.log('⚠️  MQTT already connected, reusing existing connection');
+      return Promise.resolve(this.client);
+    }
+
+    // If client exists but disconnected, return existing client (it will auto-reconnect)
+    if (this.client && this.hasInitiallyConnected) {
+      console.log('⚠️  MQTT client exists, waiting for reconnection...');
+      return Promise.resolve(this.client);
+    }
+
+    // Prevent multiple simultaneous connection attempts
+    if (this.isConnecting) {
+      console.log('⚠️  MQTT connection already in progress, waiting...');
+      return new Promise((resolve, reject) => {
+        const checkInterval = setInterval(() => {
+          if (this.client && this.client.connected) {
+            clearInterval(checkInterval);
+            resolve(this.client);
+          } else if (!this.isConnecting) {
+            clearInterval(checkInterval);
+            reject(new Error('Connection failed'));
+          }
+        }, 100);
+      });
+    }
+
+    this.isConnecting = true;
+
     return new Promise((resolve, reject) => {
+      // Generate unique client ID to prevent conflicts
+      const baseClientId = process.env.MQTT_CLIENT_ID || 'express-mqtt-client';
+      const uniqueClientId = `${baseClientId}-${Math.random()
+        .toString(36)
+        .substring(2, 9)}`;
+
       const options: mqtt.IClientOptions = {
-        clientId: process.env.MQTT_CLIENT_ID || 'express-mqtt-client',
+        clientId: uniqueClientId,
         clean: true,
         connectTimeout: 4000,
-        reconnectPeriod: 1000,
+        reconnectPeriod: 5000, // Changed from 1000 to 5000 - less aggressive reconnection
       };
 
       // Add username and password if provided
@@ -28,14 +66,32 @@ export class MQTTService {
         options
       );
 
+      // Track if this is the first connection
+      let isFirstConnection = true;
+
       this.client.on('connect', () => {
-        console.log('✅ Connected to MQTT broker');
-        resolve(this.client!);
+        if (isFirstConnection) {
+          console.log('✅ Connected to MQTT broker');
+          this.isConnecting = false;
+          this.hasInitiallyConnected = true;
+          isFirstConnection = false;
+          resolve(this.client!);
+        } else {
+          // This is a reconnection, just log quietly
+          console.log('🔄 MQTT reconnected');
+        }
+      });
+
+      this.client.on('disconnect', () => {
+        console.log('⚠️  MQTT disconnected, will auto-reconnect...');
       });
 
       this.client.on('error', (error) => {
         console.error('❌ MQTT connection error:', error);
-        reject(error);
+        this.isConnecting = false;
+        if (isFirstConnection) {
+          reject(error);
+        }
       });
 
       this.client.on('message', (topic, message) => {

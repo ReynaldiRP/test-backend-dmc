@@ -10,9 +10,12 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_DATABASE || 'test_db',
-  synchronize: process.env.NODE_ENV === 'development', // Auto-sync in dev only
+  synchronize: false, // NEVER use auto-sync - use migrations instead
   logging: process.env.NODE_ENV === 'development',
   entities: ['src/entities/**/*.ts'],
   migrations: ['src/migrations/**/*.ts'],
   subscribers: [],
 });
+
+// For TypeORM CLI - needed for migration commands
+export default AppDataSource;

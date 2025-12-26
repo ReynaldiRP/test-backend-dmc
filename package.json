@@ -4,10 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch src --exec ts-node src/app.ts",
+    "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/app.js",
-    "typeorm": "typeorm-ts-node-commonjs"
+    "typeorm": "typeorm-ts-node-commonjs -d src/config/database.ts",
+    "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/config/database.ts",
+    "migration:run": "typeorm-ts-node-commonjs migration:run -d src/config/database.ts",
+    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/config/database.ts",
+    "migration:create": "typeorm-ts-node-commonjs migration:create",
+    "migration:show": "typeorm-ts-node-commonjs migration:show -d src/config/database.ts"
   },
   "keywords": [],
   "author": "",
@@ -19,13 +24,17 @@
     "mqtt": "^5.14.1",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
-    "typeorm": "^0.3.28"
+    "typeorm": "^0.3.28",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
+    "@slidev/cli": "^52.11.1",
+    "@slidev/theme-default": "^0.25.0",
     "@types/express": "^5.0.6",
     "@types/mqtt": "^0.0.34",
     "@types/node": "^25.0.3",
     "nodemon": "^3.1.11",
+    "playwright-chromium": "^1.57.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }

@@ -1,15 +1,53 @@
-# Express + TypeORM + MQTT Project
+# IoT Greenhouse Monitoring System
 
-A Node.js backend application built with Express, TypeORM, and MQTT.js.
+A production-ready Node.js backend application for IoT greenhouse monitoring with sensor data collection and device command management.
 
 ## 🚀 Tech Stack
 
-- **Node.js** - JavaScript runtime
-- **Express** - Web framework
-- **TypeORM** - ORM for TypeScript and JavaScript
-- **PostgreSQL** - Database
-- **MQTT.js** - MQTT client for Node.js
-- **TypeScript** - Type-safe JavaScript
+- **Runtime**: Node.js with TypeScript
+- **Framework**: Express.js
+- **ORM**: TypeORM with PostgreSQL
+- **Validation**: Zod for schema validation
+- **Messaging**: MQTT.js for IoT communication
+- **Database**: PostgreSQL with proper migrations
+- **Development**: Nodemon + ts-node for hot-reload
+
+## ✨ Key Features
+
+### 🌡️ Sensor Data Management
+
+- **Idempotent sensor data submission** with Zod validation
+- Real-time sensor readings (temperature, humidity, battery)
+- Device-based data organization
+- Time-series data with timezone support
+- Flexible raw data storage (JSONB)
+- Statistical aggregations (avg, min, max)
+- Unique constraint prevents duplicate readings
+- ISO8601 timestamp format validation
+
+### 🎮 Device Command Control
+
+- Queue-based command system
+- MQTT integration for device communication
+- Command status tracking (queued → published → error)
+- Retry mechanism for failed commands
+- Device-specific command history
+
+### 📡 MQTT Integration
+
+- Pub/Sub messaging pattern
+- Auto-reconnection handling
+- Topic-based message routing
+- Connected to IoT devices via MQTT broker
+
+### 🗄️ Database Best Practices
+
+- **Migration-based schema management** (no auto-sync)
+- Proper indexing for query performance
+- UUID primary keys for distributed systems
+- Timestamptz for timezone awareness
+- Enum types for data constraints
+- Compound unique constraints
 
 ## 📁 Project Structure
 
@@ -17,44 +55,121 @@ A Node.js backend application built with Express, TypeORM, and MQTT.js.
 test-kerja/
 ├── src/
 │   ├── config/
-│   │   ├── database.ts      # TypeORM configuration
-│   │   └── mqtt.ts          # MQTT service
+│   │   ├── database.ts           # TypeORM configuration
+│   │   └── mqtt.ts               # MQTT service singleton
 │   ├── entities/
-│   │   └── User.ts          # Sample User entity
+│   │   ├── User.ts               # User entity
+│   │   ├── SensorReading.ts      # Sensor data entity
+│   │   └── DeviceCommand.ts      # Device command entity
+│   ├── migrations/
+│   │   ├── 1703600000000-InitialSchema.ts
+│   │   └── 1703600000001-AddIoTGreenhouseEntities.ts
 │   ├── routes/
-│   │   ├── user.routes.ts   # User CRUD routes
-│   │   └── mqtt.routes.ts   # MQTT routes
-│   └── app.ts               # Main application
-├── .env.example             # Environment variables template
-├── tsconfig.json            # TypeScript configuration
-├── nodemon.json             # Nodemon configuration
-└── package.json             # Dependencies and scripts
+│   │   ├── user.routes.ts        # User CRUD endpoints
+│   │   ├── mqtt.routes.ts        # MQTT pub/sub endpoints
+│   │   ├── sensor.routes.ts      # Sensor data endpoints
+│   │   └── command.routes.ts     # Device command endpoints
+│   └── app.ts                    # Application entry point
+├── data-source.ts                # TypeORM CLI configuration
+├── .env                          # Environment variables
+├── .env.example                  # Environment template
+├── tsconfig.json                 # TypeScript configuration
+├── nodemon.json                  # Nodemon configuration
+├── package.json                  # Dependencies and scripts
+├── API_DOCUMENTATION.md          # Complete API reference
+├── MIGRATIONS.md                 # Migration guide
+├── BEST_PRACTICES.md             # Best practices documentation
+├── MIGRATION_QUICK_START.md      # Quick migration reference
+└── README.md                     # This file
 ```
 
 ## 🔧 Installation
 
-1. **Clone or navigate to the project directory**
+### Prerequisites
 
-2. **Install dependencies** (already done):
+- Node.js (v18 or higher)
+- PostgreSQL (v12 or higher)
+- MQTT Broker (Mosquitto recommended)
 
-   ```bash
-   npm install
-   ```
+### 1. Clone and Install Dependencies
 
-3. **Set up environment variables**:
+```bash
+cd test-kerja
+npm install
+```
 
-   ```bash
-   cp .env.example .env
-   ```
+### 2. Set Up Environment Variables
 
-   Then edit `.env` with your configuration:
+```bash
+cp .env.example .env
+```
 
-   - Database credentials (PostgreSQL)
-   - MQTT broker URL and credentials
+Edit `.env` with your configuration:
 
-4. **Set up PostgreSQL database**:
-   - Create a database in PostgreSQL
-   - Update the `.env` file with your database credentials
+```env
+# Server
+PORT=3000
+NODE_ENV=development
+
+# Database (PostgreSQL)
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+DB_DATABASE=greenhouse_db
+
+# MQTT Broker
+MQTT_BROKER_URL=mqtt://localhost:1883
+MQTT_USERNAME=
+MQTT_PASSWORD=
+MQTT_CLIENT_ID=greenhouse-server
+```
+
+### 3. Set Up PostgreSQL Database
+
+```bash
+# Create database
+createdb greenhouse_db
+
+# Or using psql
+psql -U postgres
+CREATE DATABASE greenhouse_db;
+\q
+```
+
+### 4. Run Database Migrations
+
+```bash
+# Run all migrations to set up schema
+npm run migration:run
+
+# Check migration status
+npm run migration:show
+```
+
+Expected output:
+
+```
+[X] InitialSchema1703600000000
+[X] AddIoTGreenhouseEntities1703600000001
+```
+
+### 5. Set Up MQTT Broker (Optional - for local testing)
+
+**Windows:**
+
+```bash
+# Download from https://mosquitto.org/download/
+# Run Mosquitto
+mosquitto -v
+```
+
+**Or use a public test broker:**
+
+```env
+# In .env file
+MQTT_BROKER_URL=mqtt://test.mosquitto.org
+```
 
 ## 🏃 Running the Application
 
@@ -64,144 +179,278 @@ test-kerja/
 npm run dev
 ```
 
-### Build for Production:
+### Production Build:
 
 ```bash
+# Build TypeScript
 npm run build
-```
 
-### Start Production Server:
-
-```bash
+# Start production server
 npm start
 ```
 
+Server will be running at: `http://localhost:3000`
+
 ## 📡 API Endpoints
 
-### Health Check
+### Base URL
 
-- **GET** `/` - Server status and available endpoints
-
-### User Routes
-
-- **GET** `/api/users` - Get all users
-- **GET** `/api/users/:id` - Get user by ID
-- **POST** `/api/users` - Create new user
-- **PUT** `/api/users/:id` - Update user
-- **DELETE** `/api/users/:id` - Delete user
-
-### MQTT Routes
-
-- **POST** `/api/mqtt/publish` - Publish message to MQTT topic
-
-  ```json
-  {
-    "topic": "test/topic",
-    "message": "Hello MQTT"
-  }
-  ```
-
-- **POST** `/api/mqtt/subscribe` - Subscribe to MQTT topic
-  ```json
-  {
-    "topic": "test/topic"
-  }
-  ```
-
-## 🔌 MQTT Setup
-
-### Local MQTT Broker (Optional)
-
-If you don't have an MQTT broker, you can use Mosquitto:
-
-```bash
-# Install Mosquitto (Windows)
-# Download from: https://mosquitto.org/download/
-
-# Run Mosquitto broker
-mosquitto -v
-
-# Or use a public broker for testing
-# Update MQTT_BROKER_URL in .env to: mqtt://test.mosquitto.org
+```
+http://localhost:3000
 ```
 
-## 📝 Environment Variables
+### Quick Reference
 
-Required environment variables (see `.env.example`):
+#### Sensor Data (Idempotent Endpoint)
 
-```env
-PORT=3000
-NODE_ENV=development
+- `POST /api/sensors/sensor-data` - Idempotent sensor submission with Zod validation
 
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=your_password
-DB_DATABASE=your_database
+#### MQTT
 
-MQTT_BROKER_URL=mqtt://localhost:1883
-MQTT_USERNAME=
-MQTT_PASSWORD=
-MQTT_CLIENT_ID=express-mqtt-client
-```
+- `POST /api/mqtt/publish` - Publish to topic
+- `POST /api/mqtt/subscribe` - Subscribe to topic
 
-## 🗄️ Database Migrations
+#### Users (Base Example)
 
-TypeORM will auto-sync entities in development mode. For production, use migrations:
+- Standard CRUD operations for users
+
+**📚 Full API Documentation**: See `API_DOCUMENTATION.md`
+
+## 🧪 Testing the API
+
+### Idempotent Sensor Data Submission
 
 ```bash
-# Generate migration
-npm run typeorm migration:generate -- -n MigrationName
-
-# Run migrations
-npm run typeorm migration:run
-
-# Revert migration
-npm run typeorm migration:revert
-```
-
-## 🧪 Testing the Application
-
-### Test Health Endpoint:
-
-```bash
-curl http://localhost:3000
-```
-
-### Test User Creation:
-
-```bash
-curl -X POST http://localhost:3000/api/users \
+# Uses Zod validation and prevents duplicates
+curl -X POST http://localhost:3000/api/sensors/sensor-data \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "John Doe",
-    "email": "john@example.com",
-    "password": "password123"
+    "device_id": "greenhouse-01",
+    "timestamp": "2024-12-26T10:30:00Z",
+    "temperature": 24.5,
+    "humidity": 68.0,
+    "battery": 92.5
+  }'
+
+# Sending same data again returns existing record (idempotent)
+curl -X POST http://localhost:3000/api/sensors/sensor-data \
+  -H "Content-Type": application/json" \
+  -d '{
+    "device_id": "greenhouse-01",
+    "timestamp": "2024-12-26T10:30:00Z",
+    "temperature": 24.5,
+    "humidity": 68.0,
+    "battery": 92.5
   }'
 ```
 
-### Test MQTT Publish:
+## 🗄️ Database Schema
+
+### Entities
+
+#### SensorReading
+
+- Stores IoT sensor data from greenhouse devices
+- Unique constraint on (deviceId, timestamp)
+- Indexes on deviceId and timestamp for fast queries
+
+#### DeviceCommand
+
+- Manages commands sent to IoT devices
+- Queue-based system with status tracking
+- MQTT integration for command delivery
+
+#### User
+
+- User management and authentication support
+
+**📊 Full Schema Details**: Run `npm run migration:show` or see `MIGRATIONS.md`
+
+## 🔄 Database Migrations
+
+This project uses **TypeORM migrations** for all schema changes.
+
+### Common Commands
 
 ```bash
-curl -X POST http://localhost:3000/api/mqtt/publish \
-  -H "Content-Type: application/json" \
-  -d '{
-    "topic": "test/hello",
-    "message": "Hello from Express!"
-  }'
+# Show migration status
+npm run migration:show
+
+# Run pending migrations
+npm run migration:run
+
+# Revert last migration
+npm run migration:revert
+
+# Generate new migration after entity changes
+npm run migration:generate src/migrations/MigrationName
+
+# Create empty migration
+npm run migration:create src/migrations/CustomMigration
 ```
 
-## 📚 Additional Resources
+**📖 Full Migration Guide**: See `MIGRATIONS.md`
 
-- [Express Documentation](https://expressjs.com/)
-- [TypeORM Documentation](https://typeorm.io/)
-- [MQTT.js Documentation](https://github.com/mqttjs/MQTT.js)
-- [TypeScript Documentation](https://www.typescriptlang.org/)
+## 🏆 Best Practices Implemented
 
-## 🤝 Contributing
+✅ **Production-Ready Code**
 
-Feel free to contribute to this project by submitting pull requests or reporting issues.
+- No auto-sync (migrations only)
+- Proper error handling
+- Graceful shutdown
+- Environment-based configuration
+
+✅ **TypeScript Strict Mode**
+
+- Full type safety
+- Proper null handling
+- No implicit any
+
+✅ **Database Optimization**
+
+- Strategic indexing
+- Unique constraints
+- Proper data types
+- Query optimization
+
+✅ **IoT Patterns**
+
+- Pub/Sub messaging
+- Command queue system
+- Time-series data handling
+- Device state management
+
+✅ **Code Quality**
+
+- JSDoc comments
+- Consistent naming
+- Modular structure
+- Clean architecture
+
+**📚 Full Best Practices Guide**: See `BEST_PRACTICES.md`
+
+## 🔐 Security Considerations
+
+Current implementation includes:
+
+- Environment-based secrets
+- Parameterized queries (SQL injection protection)
+- UUID primary keys
+
+**Recommended additions for production:**
+
+```bash
+npm install helmet cors express-rate-limit bcrypt class-validator
+```
+
+See `BEST_PRACTICES.md` for security recommendations.
+
+## 📊 MQTT Topics
+
+### Device Commands
+
+```
+devices/{deviceId}/commands
+```
+
+Published when commands are created via API.
+
+**Message Format:**
+
+```json
+{
+  "commandId": "uuid",
+  "command": "ON",
+  "timestamp": "2024-12-26T10:00:00Z"
+}
+```
+
+### Custom Topics
+
+Use the MQTT API endpoints to publish/subscribe to any topic:
+
+- `POST /api/mqtt/publish`
+- `POST /api/mqtt/subscribe`
+
+## 🐛 Troubleshooting
+
+### Database Connection Issues
+
+```bash
+# Check PostgreSQL is running
+pg_isready
+
+# Test connection
+psql -U postgres -d greenhouse_db
+```
+
+### MQTT Connection Issues
+
+```bash
+# Test MQTT broker
+mosquitto_sub -h localhost -t test/topic
+
+# Check broker is running
+netstat -an | grep 1883
+```
+
+### Migration Issues
+
+```bash
+# Check migration status
+npm run migration:show
+
+# Revert and try again
+npm run migration:revert
+npm run migration:run
+```
+
+## 📚 Documentation
+
+- **API Reference**: `API_DOCUMENTATION.md`
+- **Migration Guide**: `MIGRATIONS.md`
+- **Best Practices**: `BEST_PRACTICES.md`
+- **Quick Start**: `MIGRATION_QUICK_START.md`
+
+## 🚀 Deployment
+
+### Docker Support (Future)
+
+Consider adding `Dockerfile` and `docker-compose.yml` for containerization.
+
+### Environment Setup
+
+1. Set `NODE_ENV=production`
+2. Run migrations: `npm run migration:run`
+3. Build: `npm run build`
+4. Start: `npm start`
+
+### Production Checklist
+
+- [ ] Environment variables configured
+- [ ] Database migrations run
+- [ ] MQTT broker accessible
+- [ ] Logging configured
+- [ ] Monitoring setup
+- [ ] Backups configured
+- [ ] Security headers added
+- [ ] Rate limiting enabled
+- [ ] CORS configured
 
 ## 📄 License
 
 ISC
+
+## 👤 Author
+
+A production-ready IoT backend system demonstrating best practices in Node.js, TypeScript, TypeORM, and MQTT integration.
+
+---
+
+**Quick Links:**
+
+- [API Documentation](API_DOCUMENTATION.md)
+- [Migration Guide](MIGRATIONS.md)
+- [Best Practices](BEST_PRACTICES.md)
+
+**Server Status**: Check `http://localhost:3000/` for available endpoints.

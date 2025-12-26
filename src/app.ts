@@ -5,6 +5,7 @@ import { AppDataSource } from './config/database';
 import { mqttService } from './config/mqtt';
 import userRoutes from './routes/user.routes';
 import mqttRoutes from './routes/mqtt.routes';
+import sensorRoutes from './routes/sensor.routes';
 
 dotenv.config();
 
@@ -18,16 +19,25 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.get('/', (req: Request, res: Response) => {
   res.json({
-    message: '🚀 Express + TypeORM + MQTT Server',
+    message: '🚀 IoT Greenhouse Monitoring System',
+    version: '1.0.0',
+    description: 'Express + TypeORM + MQTT + PostgreSQL',
     endpoints: {
       users: '/api/users',
       mqtt: '/api/mqtt',
+      sensorData: '/api/sensors/sensor-data',
+    },
+    documentation: {
+      migrations: 'See MIGRATIONS.md',
+      bestPractices: 'See BEST_PRACTICES.md',
+      readme: 'See README.md',
     },
   });
 });
 
 app.use('/api/users', userRoutes);
 app.use('/api/mqtt', mqttRoutes);
+app.use('/api/sensors', sensorRoutes);
 
 // Initialize connections and start server
 const startServer = async () => {
@@ -36,9 +46,17 @@ const startServer = async () => {
     await AppDataSource.initialize();
     console.log('✅ Database connected successfully');
 
-    // Initialize MQTT
-    await mqttService.connect();
-    console.log('✅ MQTT connected successfully');
+    // Initialize MQTT (with connection reuse protection)
+    try {
+      await mqttService.connect();
+      console.log('✅ MQTT connected successfully');
+    } catch (mqttError) {
+      // Don't fail the entire server if MQTT connection fails or already exists
+      console.error(
+        '⚠️  MQTT connection issue (server will continue):',
+        mqttError
+      );
+    }
 
     // Start Express server
     app.listen(PORT, () => {
