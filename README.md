@@ -49,39 +49,73 @@ A production-ready Node.js backend application for IoT greenhouse monitoring wit
 - Enum types for data constraints
 - Compound unique constraints
 
-## 📁 Project Structure
+## 📁 Project Structure (Clean Architecture)
 
 ```
 test-kerja/
 ├── src/
-│   ├── config/
-│   │   ├── database.ts           # TypeORM configuration
-│   │   └── mqtt.ts               # MQTT service singleton
-│   ├── entities/
-│   │   ├── User.ts               # User entity
-│   │   ├── SensorReading.ts      # Sensor data entity
-│   │   └── DeviceCommand.ts      # Device command entity
-│   ├── migrations/
+│   ├── controllers/              # HTTP request/response handling
+│   │   └── sensor.controller.ts
+│   ├── services/                 # Business logic layer
+│   │   └── sensor.service.ts
+│   ├── middlewares/              # Reusable middleware
+│   │   └── validate.middleware.ts
+│   ├── schemas/                  # Zod validation & DTOs
+│   │   └── sensor.schema.ts
+│   ├── routes/                   # Pure route definitions
+│   │   ├── user.routes.ts
+│   │   ├── mqtt.routes.ts
+│   │   └── sensor.routes.ts
+│   ├── entities/                 # TypeORM database models
+│   │   ├── User.ts
+│   │   ├── SensorReading.ts
+│   │   └── DeviceCommand.ts
+│   ├── migrations/               # Database migrations
 │   │   ├── 1703600000000-InitialSchema.ts
 │   │   └── 1703600000001-AddIoTGreenhouseEntities.ts
-│   ├── routes/
-│   │   ├── user.routes.ts        # User CRUD endpoints
-│   │   ├── mqtt.routes.ts        # MQTT pub/sub endpoints
-│   │   ├── sensor.routes.ts      # Sensor data endpoints
-│   │   └── command.routes.ts     # Device command endpoints
+│   ├── config/                   # Configuration files
+│   │   ├── database.ts
+│   │   └── mqtt.ts
 │   └── app.ts                    # Application entry point
-├── data-source.ts                # TypeORM CLI configuration
-├── .env                          # Environment variables
-├── .env.example                  # Environment template
-├── tsconfig.json                 # TypeScript configuration
-├── nodemon.json                  # Nodemon configuration
-├── package.json                  # Dependencies and scripts
-├── API_DOCUMENTATION.md          # Complete API reference
-├── MIGRATIONS.md                 # Migration guide
-├── BEST_PRACTICES.md             # Best practices documentation
-├── MIGRATION_QUICK_START.md      # Quick migration reference
-└── README.md                     # This file
+│
+├── Documentation/
+│   ├── README.md                      # Project overview (this file)
+│   ├── API_DOCUMENTATION.md           # API reference
+│   ├── ARCHITECTURE_GUIDELINES.md     # 🆕 Architecture & dev guidelines
+│   ├── QUICK_REFERENCE.md             # 🆕 Quick reference for adding features
+│   ├── BEST_PRACTICES.md              # Best practices guide
+│   └── MIGRATIONS.md                  # Migration documentation
+│
+├── Configuration/
+│   ├── data-source.ts            # TypeORM CLI configuration
+│   ├── .env                      # Environment variables
+│   ├── .env.example              # Environment template
+│   ├── tsconfig.json             # TypeScript configuration
+│   ├── nodemon.json              # Nodemon configuration
+│   └── package.json              # Dependencies and scripts
 ```
+
+### 🏗️ Architecture Pattern
+
+This project follows **Clean Architecture** with clear layer separation:
+
+```
+HTTP Request
+    ↓
+Route (Pure Configuration)
+    ↓
+Middleware (Validation)
+    ↓
+Controller (HTTP Handling)
+    ↓
+Service (Business Logic)
+    ↓
+Repository (TypeORM)
+    ↓
+Database
+```
+
+**📖 For detailed architecture guidelines, see [`ARCHITECTURE_GUIDELINES.md`](ARCHITECTURE_GUIDELINES.md)**
 
 ## 🔧 Installation
 
@@ -407,10 +441,40 @@ npm run migration:run
 
 ## 📚 Documentation
 
-- **API Reference**: `API_DOCUMENTATION.md`
-- **Migration Guide**: `MIGRATIONS.md`
-- **Best Practices**: `BEST_PRACTICES.md`
-- **Quick Start**: `MIGRATION_QUICK_START.md`
+### Core Documentation
+
+- **[README.md](README.md)** - Project overview and setup guide (this file)
+- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - Complete API reference with examples
+
+### Architecture & Development
+
+- **[ARCHITECTURE_GUIDELINES.md](ARCHITECTURE_GUIDELINES.md)** - 🆕 Complete architecture guide
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - 🆕 Quick reference for adding features
+- **[BEST_PRACTICES.md](BEST_PRACTICES.md)** - Production best practices
+
+### Database
+
+- **[MIGRATIONS.md](MIGRATIONS.md)** - Database migration guide
+
+---
+
+## 🏗️ Adding New Features
+
+Want to add new endpoints? Follow the **Clean Architecture pattern**:
+
+1. Read [`ARCHITECTURE_GUIDELINES.md`](ARCHITECTURE_GUIDELINES.md) for full guidelines
+2. Use [`QUICK_REFERENCE.md`](QUICK_REFERENCE.md) as a template for AI prompts
+3. Follow the layer pattern: Route → Middleware → Controller → Service
+
+**Each new feature requires:**
+
+- Entity (database model)
+- Schema (Zod validation)
+- Service (business logic)
+- Controller (HTTP handling)
+- Routes (configuration)
+
+See the complete guide in `ARCHITECTURE_GUIDELINES.md`!
 
 ## 🚀 Deployment
 
