@@ -2,6 +2,22 @@
 
 A production-ready Node.js backend application for IoT greenhouse monitoring with sensor data collection and device command management.
 
+## 👨‍💻 Developer Context
+
+This project showcases my **backend development expertise** while exploring IoT integration as a new learning area. I'm well-versed in building robust backend systems with **Node.js, TypeScript, Express, PostgreSQL, and clean architecture patterns**. However, **IoT integration—particularly MQTT messaging and device communication—is a new domain for me**, and I'm **eager to learn** and apply best practices in this exciting field.
+
+### What I Bring
+
+- ✅ **Strong Backend Foundation**: RESTful APIs, database design, TypeORM, migrations
+- ✅ **Clean Architecture**: Layered design, separation of concerns, scalable patterns
+- ✅ **Production Best Practices**: Validation, error handling, security, TypeScript strict mode
+
+### What I'm Learning
+
+- 🌱 **IoT Communication Protocols**: MQTT pub/sub patterns, broker integration
+- 🌱 **Device Management**: Command queuing, device state tracking, time-series data
+- 🌱 **Real-time Messaging**: Topic-based routing, auto-reconnection, reliability patterns
+
 ## 🚀 Tech Stack
 
 - **Runtime**: Node.js with TypeScript
