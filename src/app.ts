@@ -3,7 +3,6 @@ import express, { Application, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { AppDataSource } from './config/database';
 import { mqttService } from './config/mqtt';
-import userRoutes from './routes/user.routes';
 import mqttRoutes from './routes/mqtt.routes';
 import sensorRoutes from './routes/sensor.routes';
 import deviceRoutes from './routes/device.routes';
@@ -26,20 +25,18 @@ app.get('/', (req: Request, res: Response) => {
     description: 'Express + TypeORM + MQTT + PostgreSQL',
     endpoints: {
       health: '/api/health/status',
-      users: '/api/users',
       mqtt: '/api/mqtt',
       sensorData: '/api/sensors/sensor-data',
       deviceControl: '/api/devices/device-control',
     },
     documentation: {
-      migrations: 'See MIGRATIONS.md',
-      bestPractices: 'See BEST_PRACTICES.md',
+      apiDocs: 'See API_DOCUMENTATION.md',
+      architecture: 'See ARCHITECTURE_GUIDELINES.md',
       readme: 'See README.md',
     },
   });
 });
 
-app.use('/api/users', userRoutes);
 app.use('/api/mqtt', mqttRoutes);
 app.use('/api/sensors', sensorRoutes);
 app.use('/api/devices', deviceRoutes);

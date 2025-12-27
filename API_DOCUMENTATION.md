@@ -16,14 +16,6 @@ Base URL: `http://localhost:3000`
 
 - **POST** `/api/devices/device-control` - Send control command to IoT device via MQTT
 
-### Users (Base Example)
-
-- **GET** `/api/users` - Get all users
-- **GET** `/api/users/:id` - Get user by ID
-- **POST** `/api/users` - Create new user
-- **PUT** `/api/users/:id` - Update user
-- **DELETE** `/api/users/:id` - Delete user
-
 ### MQTT
 
 - **POST** `/api/mqtt/publish` - Publish message to topic

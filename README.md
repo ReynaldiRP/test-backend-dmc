@@ -55,17 +55,23 @@ A production-ready Node.js backend application for IoT greenhouse monitoring wit
 test-kerja/
 ├── src/
 │   ├── controllers/              # HTTP request/response handling
-│   │   └── sensor.controller.ts
+│   │   ├── sensor.controller.ts
+│   │   ├── device.controller.ts
+│   │   └── health.controller.ts
 │   ├── services/                 # Business logic layer
-│   │   └── sensor.service.ts
+│   │   ├── sensor.service.ts
+│   │   ├── device.service.ts
+│   │   └── health.service.ts
 │   ├── middlewares/              # Reusable middleware
 │   │   └── validate.middleware.ts
 │   ├── schemas/                  # Zod validation & DTOs
-│   │   └── sensor.schema.ts
+│   │   ├── sensor.schema.ts
+│   │   └── device.schema.ts
 │   ├── routes/                   # Pure route definitions
-│   │   ├── user.routes.ts
 │   │   ├── mqtt.routes.ts
-│   │   └── sensor.routes.ts
+│   │   ├── sensor.routes.ts
+│   │   ├── device.routes.ts
+│   │   └── health.routes.ts
 │   ├── entities/                 # TypeORM database models
 │   │   ├── User.ts
 │   │   ├── SensorReading.ts
@@ -235,18 +241,22 @@ http://localhost:3000
 
 ### Quick Reference
 
+#### Health Check
+
+- `GET /api/health/status` - Service health check (database + MQTT)
+
 #### Sensor Data (Idempotent Endpoint)
 
 - `POST /api/sensors/sensor-data` - Idempotent sensor submission with Zod validation
+
+#### Device Control
+
+- `POST /api/devices/device-control` - Send control command to IoT device via MQTT
 
 #### MQTT
 
 - `POST /api/mqtt/publish` - Publish to topic
 - `POST /api/mqtt/subscribe` - Subscribe to topic
-
-#### Users (Base Example)
-
-- Standard CRUD operations for users
 
 **📚 Full API Documentation**: See `API_DOCUMENTATION.md`
 
