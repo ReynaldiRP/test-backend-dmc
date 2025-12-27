@@ -304,10 +304,6 @@ curl -X POST http://localhost:3000/api/sensors/sensor-data \
 - Queue-based system with status tracking
 - MQTT integration for command delivery
 
-#### User
-
-- User management and authentication support
-
 **📊 Full Schema Details**: Run `npm run migration:show` or see `MIGRATIONS.md`
 
 ## 🔄 Database Migrations
@@ -380,14 +376,6 @@ Current implementation includes:
 - Environment-based secrets
 - Parameterized queries (SQL injection protection)
 - UUID primary keys
-
-**Recommended additions for production:**
-
-```bash
-npm install helmet cors express-rate-limit bcrypt class-validator
-```
-
-See `BEST_PRACTICES.md` for security recommendations.
 
 ## 📊 MQTT Topics
 
@@ -485,39 +473,6 @@ Want to add new endpoints? Follow the **Clean Architecture pattern**:
 - Routes (configuration)
 
 See the complete guide in `ARCHITECTURE_GUIDELINES.md`!
-
-## 🚀 Deployment
-
-### Docker Support (Future)
-
-Consider adding `Dockerfile` and `docker-compose.yml` for containerization.
-
-### Environment Setup
-
-1. Set `NODE_ENV=production`
-2. Run migrations: `npm run migration:run`
-3. Build: `npm run build`
-4. Start: `npm start`
-
-### Production Checklist
-
-- [ ] Environment variables configured
-- [ ] Database migrations run
-- [ ] MQTT broker accessible
-- [ ] Logging configured
-- [ ] Monitoring setup
-- [ ] Backups configured
-- [ ] Security headers added
-- [ ] Rate limiting enabled
-- [ ] CORS configured
-
-## 📄 License
-
-ISC
-
-## 👤 Author
-
-A production-ready IoT backend system demonstrating best practices in Node.js, TypeScript, TypeORM, and MQTT integration.
 
 ---
 
