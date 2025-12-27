@@ -6,11 +6,15 @@ Base URL: `http://localhost:3000`
 
 ### Health Check
 
-- **GET** `/` - API information and available endpoints
+- **GET** `/api/health/status` - Service health check (database + MQTT)
 
 ### Sensor Data (Idempotent with Zod Validation)
 
 - **POST** `/api/sensors/sensor-data` - Idempotent sensor data submission
+
+### Device Control
+
+- **POST** `/api/devices/device-control` - Send control command to IoT device via MQTT
 
 ### Users (Base Example)
 
@@ -28,6 +32,226 @@ Base URL: `http://localhost:3000`
 ---
 
 ## 📝 Detailed API Reference
+
+### GET /status - Health Check
+
+```http
+GET /api/health/status
+```
+
+**Description:**  
+Health check endpoint for monitoring service status. Performs concurrent checks on database connectivity (with latency measurement) and MQTT connection status. Returns HTTP 200 if all services are healthy, or HTTP 503 if any service is degraded.
+
+**No Request Body Required**
+
+**Response - All Services Healthy (200 OK):**
+
+```json
+{
+  "service": "ok",
+  "db": {
+    "status": "connected",
+    "latency_ms": 15
+  },
+  "mqtt": {
+    "status": "connected"
+  }
+}
+```
+
+**Response - Database Disconnected (503 Service Unavailable):**
+
+```json
+{
+  "service": "degraded",
+  "db": {
+    "status": "disconnected",
+    "latency_ms": 0,
+    "error": "Connection refused"
+  },
+  "mqtt": {
+    "status": "connected"
+  }
+}
+```
+
+**Response - MQTT Disconnected (503 Service Unavailable):**
+
+```json
+{
+  "service": "degraded",
+  "db": {
+    "status": "connected",
+    "latency_ms": 12
+  },
+  "mqtt": {
+    "status": "disconnected",
+    "error": "MQTT client disconnected"
+  }
+}
+```
+
+**Response - All Services Down (503 Service Unavailable):**
+
+```json
+{
+  "service": "degraded",
+  "db": {
+    "status": "disconnected",
+    "latency_ms": 0,
+    "error": "Database connection error"
+  },
+  "mqtt": {
+    "status": "disconnected",
+    "error": "MQTT client not initialized"
+  }
+}
+```
+
+**Testing Example:**
+
+```bash
+# Check service health
+curl http://localhost:3000/api/health/status
+
+# With response formatting
+curl http://localhost:3000/api/health/status | jq
+```
+
+**Technical Details:**
+
+- Uses `Promise.allSettled` for concurrent health checks
+- Database check: Executes `SELECT 1` and measures latency
+- MQTT check: Verifies `mqttClient.connected` status
+- Lightweight operation suitable for frequent monitoring
+
+**Use Cases:**
+
+- Container orchestration health probes (Kubernetes, Docker)
+- Load balancer health checks
+- Monitoring and alerting systems
+- Service dependency tracking
+
+**Status Codes:**
+
+- `200 OK` - All services healthy
+- `503 Service Unavailable` - One or more services degraded
+
+---
+
+### POST /device-control - Device Control Command
+
+```http
+POST /api/devices/device-control
+Content-Type: application/json
+```
+
+**Description:**  
+Send control command to an IoT device. Creates a database record with status "queued", publishes command to MQTT topic `greenhouse/control/{device_id}`, and updates status to "published" or "error" based on MQTT publish result.
+
+**Request Body (Zod Validated):**
+
+```json
+{
+  "device_id": "greenhouse-01",
+  "command": "ON"
+}
+```
+
+**Field Requirements:**
+
+- `device_id`: string (required, min length 1)
+- `command`: enum (required, must be either "ON" or "OFF")
+
+**Response - Success (201 Created):**
+
+```json
+{
+  "success": true,
+  "message": "Command sent successfully",
+  "status": "published",
+  "data": {
+    "id": "uuid-here",
+    "deviceId": "greenhouse-01",
+    "command": "ON",
+    "status": "published",
+    "createdAt": "2024-12-27T07:30:00.000Z"
+  }
+}
+```
+
+**Response - MQTT Publish Failed (500 Internal Server Error):**
+
+```json
+{
+  "success": false,
+  "error": "MQTT publish failed",
+  "message": "MQTT client not connected",
+  "status": "error"
+}
+```
+
+**Error Response - Validation Error (400 Bad Request):**
+
+```json
+{
+  "success": false,
+  "error": "Validation failed",
+  "details": [
+    {
+      "field": "command",
+      "message": "command must be either 'ON' or 'OFF'"
+    }
+  ]
+}
+```
+
+**Testing Examples:**
+
+```bash
+# Send ON command
+curl -X POST http://localhost:3000/api/devices/device-control \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "greenhouse-01",
+    "command": "ON"
+  }'
+
+# Send OFF command
+curl -X POST http://localhost:3000/api/devices/device-control \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "greenhouse-01",
+    "command": "OFF"
+  }'
+
+# Test validation error (invalid command)
+curl -X POST http://localhost:3000/api/devices/device-control \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "greenhouse-01",
+    "command": "INVALID"
+  }'
+```
+
+**MQTT Topic Pattern:**
+
+- Topic: `greenhouse/control/{device_id}`
+- Payload: `{"command": "ON", "timestamp": "2024-12-27T07:30:00.000Z"}`
+
+**Status Flow:**
+
+1. Initial: `queued` (when record is created)
+2. Success: `published` (MQTT publish successful)
+3. Error: `error` (MQTT publish failed, errorMessage stored)
+
+**Status Codes:**
+
+- `201 Created` - Command sent successfully
+- `400 Bad Request` - Validation error
+- `500 Internal Server Error` - MQTT publish failed
+
+---
 
 ### POST /sensor-data - Idempotent Sensor Data Submission
 

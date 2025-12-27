@@ -6,6 +6,8 @@ import { mqttService } from './config/mqtt';
 import userRoutes from './routes/user.routes';
 import mqttRoutes from './routes/mqtt.routes';
 import sensorRoutes from './routes/sensor.routes';
+import deviceRoutes from './routes/device.routes';
+import healthRoutes from './routes/health.routes';
 
 dotenv.config();
 
@@ -23,9 +25,11 @@ app.get('/', (req: Request, res: Response) => {
     version: '1.0.0',
     description: 'Express + TypeORM + MQTT + PostgreSQL',
     endpoints: {
+      health: '/api/health/status',
       users: '/api/users',
       mqtt: '/api/mqtt',
       sensorData: '/api/sensors/sensor-data',
+      deviceControl: '/api/devices/device-control',
     },
     documentation: {
       migrations: 'See MIGRATIONS.md',
@@ -38,6 +42,8 @@ app.get('/', (req: Request, res: Response) => {
 app.use('/api/users', userRoutes);
 app.use('/api/mqtt', mqttRoutes);
 app.use('/api/sensors', sensorRoutes);
+app.use('/api/devices', deviceRoutes);
+app.use('/api/health', healthRoutes);
 
 // Initialize connections and start server
 const startServer = async () => {
